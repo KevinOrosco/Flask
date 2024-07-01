@@ -12,27 +12,31 @@ bp = Blueprint('auth', __name__, url_prefix='/auth')
 def register():
     if request.method == 'POST':
         username = request.form['username']
+        Email = request.form['Email']
         password = request.form['password']
-        repassword = request.form['re-password']
+        re_password = request.form['re_password']
 
         db = get_db()
         error = None
 
         if not username:
             error = 'Nombre de usuario requerido.'
+        elif not Email:
+            error = "correo electronico es requerido"
         elif not password:
             error = 'Contraseña requerida.'
-        elif not repassword:
+        elif not re_password:
             error = 'Verificacion es requerida.'
-        elif password != repassword:
+        elif password != re_password:
             error = "Las contraseñas no coinciden."
 
         if error is None:
             try:
                 db.execute(
-                    "INSERT INTO user (username, password) VALUES (?, ?)",
-                    (username, generate_password_hash(password)),
+                    "INSERT INTO user (username, password, re_password, Email) VALUES (?, ?, ?, ?)",
+                    (username, generate_password_hash(password),generate_password_hash(re_password), Email)
                 )
+                
                 db.commit()
             except db.IntegrityError:
                 error = f"El usuario {username} ya esta registrado."
@@ -47,6 +51,7 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+
         db = get_db()
         error = None
         user = db.execute(
@@ -55,7 +60,7 @@ def login():
 
         if user is None:
             error = 'Usuario incorrecto.'
-        elif not check_password_hash(user['password'], password):
+        elif not check_password_hash(user['password'], password, ):
             error = 'Contraseña incorrecta.'
 
         if error is None:
